@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "django.fullname" . }}
+  labels:
+    {{- include "django.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "django.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "django.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.django.configureTemplates }}
+      volumes:
+      - name: django-index
+        configMap:
+          name: django-index
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "django.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          #command: [ "/bin/bash", "-ce", "tail -f /dev/null" ]
+          env:
+            - name: DJANGO_ALLOWED_HOSTS
+              value: "*"
+            - name: DATABASE_HOST
+              value: {{ .Values.django.DbHost }}
+            - name: DATABASE_NAME
+              value: {{ .Values.django.dbName }}
+            - name: DATABASE_USERNAME
+              value: {{ .Values.django.dbUsername }}
+            - name: DATABASE_ENGINE
+              value: {{ .Values.django.engine }}
+            - name: DATABASE_PORT
+              value: "3306"
+            - name: CONFIGURE_MYSQL_CONNECTION
+              value: "true"
+            - name: DJANGO_SECRET_KEY
+              value: {{ .Values.django.secreKey }}
+            - name: MYSQL_DB_PASSWORD
+              value: {{ .Values.django.mySqlDbPassword }}
+            - name: DATABASE_DJANGO_PASSWORD
+              value: {{ .Values.django.dbPassword }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          {{- if .Values.django.configureTemplates }}
+          volumeMounts:
+            - name: django-index
+              mountPath: /opt/djangoapp/src/templates
+          {{- end }}
+      initContainers:
+        - name: "{{ .Chart.Name }}-init"
+          image: "{{ .Values.initImage.repository }}:{{ .Values.initImage.tag | default .Chart.AppVersion }}"
+          env:
+            - name: DATABASE_HOST
+              value: {{ .Values.django.DbHost }}
+            - name: MYSQL_DB_PASSWORD
+              value: {{ .Values.django.mySqlDbPassword }}
+            - name: DATABASE_DJANGO_PASSWORD
+              value: {{ .Values.django.dbPassword }}

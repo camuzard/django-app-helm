@@ -1,0 +1,13 @@
+releases:
+  - name: mysql
+    namespace: dev 
+    chart: ./mysql
+    version: 0.1.0
+  - name: django
+    namespace: dev
+    chart: ./django
+    version: 0.1.0
+  - name: varnish
+    namespace: dev
+    chart: ./varnish
+    version: 0.1.0

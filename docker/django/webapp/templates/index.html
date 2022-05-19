@@ -1,0 +1,47 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Request Counter</title>
+  <meta name="description" content="Request counter">
+  <meta name="author" content="LC">
+
+  <style type="text/css">
+    body {
+      background-color: #111;
+    }
+
+    .p1 {
+      font-weight: bold;
+      width: 180px;
+      color: white;
+      font-family: Tahoma, sans-serif;
+      font-size:18px
+    }
+
+    .main {
+      margin: auto;
+      text-align: center;
+      width: 180px;
+    }
+ 
+    .req {
+      position: absolute;
+      top: 50%;
+      transform: translate(0, -50%);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="main">
+	 <div class="req">
+  {% block content %}
+    <p class="p1">{{ request_number }} requests</p>
+  {% endblock %}
+    </div>
+  </div>
+</body>
+</html>
